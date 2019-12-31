@@ -16,6 +16,7 @@
 package com.alibaba.dubbo.config;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.alibaba.dubbo.common.extension.ExtensionLoader;
 import com.alibaba.dubbo.common.serialize.Serialization;
@@ -133,6 +134,8 @@ public class ProtocolConfig extends AbstractConfig {
 
     // 是否为缺省
     private Boolean isDefault;
+
+    private static final AtomicBoolean destroyed = new AtomicBoolean(false);
     
     public ProtocolConfig() {
     }
@@ -460,6 +463,9 @@ public class ProtocolConfig extends AbstractConfig {
     }
 
     public static void destroyAll() {
+        if (!destroyed.compareAndSet(false, true)) {
+            return;
+        }
         AbstractRegistryFactory.destroyAll();
         ExtensionLoader<Protocol> loader = ExtensionLoader.getExtensionLoader(Protocol.class);
         for (String protocolName : loader.getLoadedExtensions()) {

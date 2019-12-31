@@ -21,6 +21,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.common.utils.AtomicPositiveInteger;
+import com.alibaba.dubbo.common.utils.ConfigUtils;
 import com.alibaba.dubbo.remoting.RemotingException;
 import com.alibaba.dubbo.remoting.TimeoutException;
 import com.alibaba.dubbo.remoting.exchange.ExchangeClient;
@@ -132,7 +133,8 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 }
                 for (ExchangeClient client : clients) {
                     try {
-                        client.close();
+                        this.close(client);
+//                        client.close();
                     } catch (Throwable t) {
                         logger.warn(t.getMessage(), t);
                     }
@@ -141,6 +143,27 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             }finally {
                 destroyLock.unlock();
             }
+        }
+    }
+
+    /**
+     *  如果没有设置dubbo.service.shutdown.wait
+     *  或者dubbo.service.shutdown.wait.seconds参数，则直接关闭
+     *
+     * @param client
+     * @author 夏志强
+     */
+    @SuppressWarnings("deprecation")
+    private void close(ExchangeClient client) {
+        String timeout = ConfigUtils.getProperty(Constants.SHUTDOWN_WAIT_KEY);
+        if(timeout != null && timeout.length() > 0) {
+            try{
+                client.close(Integer.parseInt(timeout));
+            } catch(Exception e) {
+            }
+        }else {
+            // 如果没传入参数 默认值30秒 调皮不。。。
+            client.close(30000);
         }
     }
 }

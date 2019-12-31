@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -80,6 +81,8 @@ public abstract class AbstractRegistry implements Registry {
     private final boolean syncSaveFile ;
     
     private final AtomicLong lastCacheChanged = new AtomicLong();
+
+    private AtomicBoolean destroyed = new AtomicBoolean(false);
 
     private final Set<URL> registered = new ConcurrentHashSet<URL>();
 
@@ -481,6 +484,9 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void destroy() {
+        if (!destroyed.compareAndSet(false, true)) {
+            return;
+        }
         if (logger.isInfoEnabled()){
             logger.info("Destroy registry:" + getUrl());
         }

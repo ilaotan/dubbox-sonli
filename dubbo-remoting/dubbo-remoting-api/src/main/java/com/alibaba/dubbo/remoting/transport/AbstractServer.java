@@ -15,6 +15,7 @@
  */
 package com.alibaba.dubbo.remoting.transport;
 
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -32,6 +33,7 @@ import com.alibaba.dubbo.remoting.Channel;
 import com.alibaba.dubbo.remoting.ChannelHandler;
 import com.alibaba.dubbo.remoting.RemotingException;
 import com.alibaba.dubbo.remoting.Server;
+import com.alibaba.dubbo.remoting.transport.dispatcher.WrappedChannelHandler;
 
 /**
  * AbstractServer
@@ -76,7 +78,30 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
 
         executor = (ExecutorService) ExtensionLoader.getExtensionLoader(DataStore.class)
                 .getDefaultExtension().get(Constants.EXECUTOR_SERVICE_COMPONENT_KEY, Integer.toString(url.getPort()));
+
+//        this.setExecutor(handler);
     }
+
+    /**
+     * 设置executor
+     * @param handler
+     * @author 夏志强
+     */
+    private void setExecutor(ChannelHandler handler) {
+        if(handler != null) {
+            if (handler instanceof WrappedChannelHandler){
+                executor = ((WrappedChannelHandler)handler).getExecutor();
+            } else if (handler instanceof AbstractChannelHandlerDelegate ){
+                try {
+                    Field field = AbstractChannelHandlerDelegate.class.getDeclaredField("handler");
+                    field.setAccessible(true);
+                    setExecutor((ChannelHandler)field.get(handler));
+                } catch (Exception e) {
+                }
+            }
+        }
+    }
+
     
     protected abstract void doOpen() throws Throwable;
     

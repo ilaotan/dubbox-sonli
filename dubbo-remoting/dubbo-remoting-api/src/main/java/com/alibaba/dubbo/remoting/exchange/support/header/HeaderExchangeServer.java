@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
@@ -60,10 +61,10 @@ public class HeaderExchangeServer implements ExchangeServer {
     private int                            heartbeat;
 
     private int                            heartbeatTimeout;
-    
+
     private final Server server;
 
-    private volatile boolean closed = false;
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     public HeaderExchangeServer(Server server) {
         if (server == null) {
@@ -105,7 +106,7 @@ public class HeaderExchangeServer implements ExchangeServer {
         if (timeout > 0) {
             final long max = (long) timeout;
             final long start = System.currentTimeMillis();
-            if (getUrl().getParameter(Constants.CHANNEL_SEND_READONLYEVENT_KEY, false)){
+            if (getUrl().getParameter(Constants.CHANNEL_SEND_READONLYEVENT_KEY, true)) {
                 sendChannelReadOnlyEvent();
             }
             while (HeaderExchangeServer.this.isRunning() 
@@ -138,10 +139,9 @@ public class HeaderExchangeServer implements ExchangeServer {
     }
     
     private void doClose() {
-        if (closed) {
+        if (!closed.compareAndSet(false, true)) {
             return;
         }
-        closed = true;
         stopHeartbeatTimer();
         try {
             scheduled.shutdown();
@@ -218,14 +218,14 @@ public class HeaderExchangeServer implements ExchangeServer {
     }
 
     public void send(Object message) throws RemotingException {
-        if (closed) {
+        if (closed.get()) {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send message " + message + ", cause: The server " + getLocalAddress() + " is closed!");
         }
         server.send(message);
     }
 
     public void send(Object message, boolean sent) throws RemotingException {
-        if (closed) {
+        if (closed.get()) {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send message " + message + ", cause: The server " + getLocalAddress() + " is closed!");
         }
         server.send(message, sent);
