@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.alibaba.dubbo.common.Constants;
@@ -76,6 +77,8 @@ public class DubboProtocol extends AbstractProtocol {
     private final ConcurrentMap<String, LazyConnectExchangeClient> ghostClientMap = new ConcurrentHashMap<String, LazyConnectExchangeClient>();
 
     private final Set<String> optimizers = new ConcurrentHashSet<String>();
+
+    private AtomicBoolean destroyed = new AtomicBoolean(false);
 
     //consumer side export a stub service for dispatching event
     //servicekey-stubmethods
@@ -184,6 +187,10 @@ public class DubboProtocol extends AbstractProtocol {
 
     public Collection<Exporter<?>> getExporters() {
         return Collections.unmodifiableCollection(exporterMap.values());
+    }
+
+    public Boolean isDestroyed() {
+        return destroyed.get();
     }
     
     Map<String, Exporter<?>> getExporterMap(){
@@ -431,6 +438,7 @@ public class DubboProtocol extends AbstractProtocol {
     }
 
     public void destroy() {
+        System.out.println("destroy 开始 " + serverMap.size() + " | " + referenceClientMap.size() + " | " + stubServiceMethodsMap.size());
         for (String key : new ArrayList<String>(serverMap.keySet())) {
             ExchangeServer server = serverMap.remove(key);
             if (server != null) {
@@ -444,7 +452,8 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
         }
-        
+        System.out.println("destroy 开始 serverMap over");
+
         for (String key : new ArrayList<String>(referenceClientMap.keySet())) {
             ExchangeClient client = referenceClientMap.remove(key);
             if (client != null) {
@@ -458,7 +467,9 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
         }
-        
+        System.out.println("destroy 开始 referenceClientMap over");
+
+
         for (String key : new ArrayList<String>(ghostClientMap.keySet())) {
             ExchangeClient client = ghostClientMap.remove(key);
             if (client != null) {
@@ -472,7 +483,13 @@ public class DubboProtocol extends AbstractProtocol {
                 }
             }
         }
+        System.out.println("destroy 开始 ghostClientMap over");
+
         stubServiceMethodsMap.clear();
+        System.out.println("destroy 开始 stubServiceMethodsMap over");
         super.destroy();
+        System.out.println("destroy 开始 super.destroy over");
+        destroyed.compareAndSet(false, true);
+
     }
 }
