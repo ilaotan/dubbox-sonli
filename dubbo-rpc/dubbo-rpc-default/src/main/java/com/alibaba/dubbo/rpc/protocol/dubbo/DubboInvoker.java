@@ -162,8 +162,8 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             } catch(Exception e) {
             }
         }else {
-            // 如果没传入参数 默认值30秒 调皮不。。。
-            client.close(30000);
+            // 如果没传入参数 默认值10秒 调皮不。。。
+            client.close(10000);
         }
     }
 }

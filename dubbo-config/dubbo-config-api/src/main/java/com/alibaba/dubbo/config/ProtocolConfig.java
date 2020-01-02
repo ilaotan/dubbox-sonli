@@ -18,6 +18,7 @@ package com.alibaba.dubbo.config;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.extension.ExtensionLoader;
 import com.alibaba.dubbo.common.serialize.Serialization;
 import com.alibaba.dubbo.common.status.StatusChecker;
@@ -466,7 +467,19 @@ public class ProtocolConfig extends AbstractConfig {
         if (!destroyed.compareAndSet(false, true)) {
             return;
         }
+        //1. 关闭注册中心
         AbstractRegistryFactory.destroyAll();
+
+        //2。 Wait for registry notification
+        //这一句是新版dubbo的关键改动之处。老版本没有这几行sleep的代码【请读者自行阅读老版本的源码】。默认10秒，可以通过 [dubbo.service.shutdown.wait] 配置
+        //
+        try {
+//            Thread.sleep(AbstractProtocol.getServerShutdownTimeout());
+            Thread.sleep(Constants.DEFAULT_SERVER_SHUTDOWN_TIMEOUT);
+        } catch (InterruptedException e) {
+            logger.warn("Interrupted unexpectedly when waiting for registry notification during shutdown process!");
+        }
+
         ExtensionLoader<Protocol> loader = ExtensionLoader.getExtensionLoader(Protocol.class);
         for (String protocolName : loader.getLoadedExtensions()) {
             try {
