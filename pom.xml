@@ -82,6 +82,13 @@
 			</build>
 		</profile>
 	</profiles>
+	<distributionManagement>
+		<repository>
+			<id>releases</id>
+			<url>http://172.16.100.3:8087/nexus-service/content/repositories/releases/</url>
+		</repository>
+	</distributionManagement>
+
 	<properties>
 		<!-- Common libs -->
 		<spring.bom.version>3.2.9.RELEASE</spring.bom.version>
