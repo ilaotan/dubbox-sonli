@@ -475,7 +475,7 @@ public class ProtocolConfig extends AbstractConfig {
         //这一句是新版dubbo的关键改动之处。老版本没有这几行sleep的代码【请读者自行阅读老版本的源码】。默认10秒，可以通过 [dubbo.service.shutdown.wait] 配置
         //
         try {
-            Thread.sleep(Constants.DEFAULT_SERVER_SHUTDOWN_TIMEOUT);
+            Thread.sleep(AbstractProtocol.getServerShutdownTimeout());
         } catch (InterruptedException e) {
             logger.warn("Interrupted unexpectedly when waiting for registry notification during shutdown process!");
         }
