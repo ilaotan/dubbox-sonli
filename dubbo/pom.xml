@@ -28,6 +28,14 @@
     <properties>
         <skip_maven_deploy>false</skip_maven_deploy>
     </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <url>http://172.16.100.3:8087/nexus-service/content/repositories/releases/</url>
+        </repository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>com.alibaba</groupId>
