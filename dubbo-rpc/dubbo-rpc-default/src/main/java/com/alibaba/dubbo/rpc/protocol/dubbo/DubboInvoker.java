@@ -163,7 +163,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             }
         }else {
             // 如果没传入参数 默认值10秒 调皮不。。。
-            client.close(10000);
+            client.close(30000);
         }
     }
 }

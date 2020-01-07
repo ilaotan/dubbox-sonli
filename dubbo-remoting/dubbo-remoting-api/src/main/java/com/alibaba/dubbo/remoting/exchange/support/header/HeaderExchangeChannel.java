@@ -131,6 +131,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     // graceful close
     public void close(int timeout) {
+        System.out.println("graceful close begin timeout: "  + timeout);
         if (closed) {
             return;
         }
@@ -147,6 +148,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
             }
         }
         close();
+        System.out.println("graceful close final timeout: "  + timeout);
     }
 
     public InetSocketAddress getLocalAddress() {
