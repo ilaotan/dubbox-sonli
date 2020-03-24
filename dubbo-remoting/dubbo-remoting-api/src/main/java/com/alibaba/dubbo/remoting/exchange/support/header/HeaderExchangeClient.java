@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ import com.alibaba.dubbo.remoting.exchange.ResponseFuture;
 
 /**
  * DefaultMessageClient
- * 
+ *
  * @author william.liangf
  * @author chao.liuc
  */
@@ -55,7 +55,7 @@ public class HeaderExchangeClient implements ExchangeClient {
     private int heartbeat;
 
     private int heartbeatTimeout;
-    
+
     private final Client client;
 
     private final ExchangeChannel channel;
@@ -106,11 +106,11 @@ public class HeaderExchangeClient implements ExchangeClient {
     public ExchangeHandler getExchangeHandler() {
         return channel.getExchangeHandler();
     }
-    
+
     public void send(Object message) throws RemotingException {
         channel.send(message);
     }
-    
+
     public void send(Object message, boolean sent) throws RemotingException {
         channel.send(message, sent);
     }
@@ -125,14 +125,21 @@ public class HeaderExchangeClient implements ExchangeClient {
     }
 
     public void close(int timeout) {
+        // 标记client进入关闭流程
+        startClose();
         doClose();
         channel.close(timeout);
+    }
+
+    @Override
+    public void startClose() {
+        channel.startClose();
     }
 
     public void reset(URL url) {
         client.reset(url);
     }
-    
+
     @Deprecated
     public void reset(com.alibaba.dubbo.common.Parameters parameters){
         reset(getUrl().addParameters(parameters.getParameters()));

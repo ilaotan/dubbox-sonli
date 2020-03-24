@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,11 +42,11 @@ import com.alibaba.dubbo.remoting.exchange.support.DefaultFuture;
 
 /**
  * ExchangeServerImpl
- * 
+ *
  * @author william.liangf
  */
 public class HeaderExchangeServer implements ExchangeServer {
-    
+
     protected final Logger        logger = LoggerFactory.getLogger(getClass());
 
     private final ScheduledExecutorService scheduled                 = Executors.newScheduledThreadPool(1,
@@ -78,7 +78,7 @@ public class HeaderExchangeServer implements ExchangeServer {
         }
         startHeatbeatTimer();
     }
-    
+
     public Server getServer() {
         return server;
     }
@@ -103,6 +103,7 @@ public class HeaderExchangeServer implements ExchangeServer {
     }
 
     public void close(final int timeout) {
+        startClose();
         if (timeout > 0) {
             final long max = (long) timeout;
             final long start = System.currentTimeMillis();
@@ -110,7 +111,7 @@ public class HeaderExchangeServer implements ExchangeServer {
                 System.out.println("channel 设置为只读只读只读只读只读只读只读只读只读只读只读只读只读只读只读只读只读");
                 sendChannelReadOnlyEvent();
             }
-            while (HeaderExchangeServer.this.isRunning() 
+            while (HeaderExchangeServer.this.isRunning()
                     && System.currentTimeMillis() - start < max) {
                 try {
                     Thread.sleep(10);
@@ -122,13 +123,19 @@ public class HeaderExchangeServer implements ExchangeServer {
         doClose();
         server.close(timeout);
     }
-    
+
+    @Override
+    public void startClose() {
+        server.startClose();
+    }
+
+
     private void sendChannelReadOnlyEvent(){
         Request request = new Request();
         request.setEvent(Request.READONLY_EVENT);
         request.setTwoWay(false);
         request.setVersion(Version.getVersion());
-        
+
         Collection<Channel> channels = getChannels();
         for (Channel channel : channels) {
             try {
@@ -138,7 +145,7 @@ public class HeaderExchangeServer implements ExchangeServer {
             }
         }
     }
-    
+
     private void doClose() {
         if (!closed.compareAndSet(false, true)) {
             return;
@@ -212,7 +219,7 @@ public class HeaderExchangeServer implements ExchangeServer {
             logger.error(t.getMessage(), t);
         }
     }
-    
+
     @Deprecated
     public void reset(com.alibaba.dubbo.common.Parameters parameters){
         reset(getUrl().addParameters(parameters.getParameters()));

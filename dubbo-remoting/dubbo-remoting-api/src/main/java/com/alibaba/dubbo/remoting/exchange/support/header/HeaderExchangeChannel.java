@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,7 +33,7 @@ import com.alibaba.dubbo.remoting.exchange.support.DefaultFuture;
 
 /**
  * ExchangeReceiver
- * 
+ *
  * @author william.liangf
  */
 final class HeaderExchangeChannel implements ExchangeChannel {
@@ -66,17 +66,17 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         }
         return ret;
     }
-    
+
     static void removeChannelIfDisconnected(Channel ch) {
         if (ch != null && ! ch.isConnected()) {
             ch.removeAttribute(CHANNEL_KEY);
         }
     }
-    
+
     public void send(Object message) throws RemotingException {
         send(message, getUrl().getParameter(Constants.SENT_KEY, false));
     }
-    
+
     public void send(Object message, boolean sent) throws RemotingException {
         if (closed) {
             throw new RemotingException(this.getLocalAddress(), null, "Failed to send message " + message + ", cause: The channel " + this + " is closed!");
@@ -151,6 +151,11 @@ final class HeaderExchangeChannel implements ExchangeChannel {
         System.out.println("graceful close final timeout: "  + timeout);
     }
 
+    @Override
+    public void startClose() {
+        channel.startClose();
+    }
+
     public InetSocketAddress getLocalAddress() {
         return channel.getLocalAddress();
     }
@@ -174,7 +179,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
     public ExchangeHandler getExchangeHandler() {
         return (ExchangeHandler) channel.getChannelHandler();
     }
-    
+
     public Object getAttribute(String key) {
         return channel.getAttribute(key);
     }

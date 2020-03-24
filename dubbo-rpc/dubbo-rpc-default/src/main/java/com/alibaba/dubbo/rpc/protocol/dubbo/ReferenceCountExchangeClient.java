@@ -131,8 +131,14 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
      */
     public void close() {
         //默认设置close超时时间，否则没法真正实现graceful shutdown
-        close(ConfigUtils.getServerShutdownTimeout());
+        close(0);
     }
+
+    public void startClose() {
+        client.startClose();
+    }
+
+
 
     public void close(int timeout) {
         System.out.println("ReferenceCountExchangeClient close() timeout" + timeout);
