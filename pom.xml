@@ -158,6 +158,34 @@
 
         <maven-surefire-plugin_version>2.17</maven-surefire-plugin_version>
 	</properties>
+	<!-- 中央仓库 使用maven官方跟开源中国的库 -->
+	<repositories>
+		<repository>
+			<id>maven-local</id>
+			<name>maven-local</name>
+			<layout>default</layout>
+			<url>http://172.16.100.3:8087/nexus-service/content/groups/public/</url>
+		</repository>
+		<repository>
+			<id>oschina Releases</id>
+			<name>oschina Releases</name>
+			<url>http://maven.aliyun.com/content/groups/public</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>oschina Releases</id>
+			<name>oschina Releases</name>
+			<url>http://maven.aliyun.com/content/groups/public</url>
+		</pluginRepository>
+
+		<pluginRepository>
+			<id>maven-local</id>
+			<name>maven-local</name>
+			<layout>default</layout>
+			<url>http://172.16.100.3:8087/nexus-service/content/groups/public/</url>
+		</pluginRepository>
+	</pluginRepositories>
 	<distributionManagement>
 		<repository>
 			<id>releases</id>

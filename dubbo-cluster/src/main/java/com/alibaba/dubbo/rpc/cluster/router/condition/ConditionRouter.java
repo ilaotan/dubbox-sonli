@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2012 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,21 +39,21 @@ import com.alibaba.dubbo.rpc.cluster.Router;
 
 /**
  * ConditionRouter
- * 
+ *
  * @author william.liangf
  */
 public class ConditionRouter implements Router, Comparable<Router> {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(ConditionRouter.class);
 
     private final URL url;
-    
+
     private final int priority;
 
     private final boolean force;
 
     private final Map<String, MatchPair> whenCondition;
-    
+
     private final Map<String, MatchPair> thenCondition;
 
     public ConditionRouter(URL url) {
@@ -129,7 +129,7 @@ public class ConditionRouter implements Router, Comparable<Router> {
     public boolean matchThen(URL url, URL param) {
         return thenCondition != null && matchCondition(thenCondition, url, param);
     }
-    
+
     private boolean matchCondition(Map<String, MatchPair> condition, URL url, URL param) {
         Map<String, String> sample = url.toMap();
         for (Map.Entry<String, String> entry : sample.entrySet()) {
@@ -141,15 +141,15 @@ public class ConditionRouter implements Router, Comparable<Router> {
         }
         return true;
     }
-    
+
     private static Pattern ROUTE_PATTERN = Pattern.compile("([&!=,]*)\\s*([^&!=,\\s]+)");
-    
+
     private static Map<String, MatchPair> parseRule(String rule)
             throws ParseException {
         Map<String, MatchPair> condition = new HashMap<String, MatchPair>();
         if(StringUtils.isBlank(rule)) {
             return condition;
-        }        
+        }
         // 匹配或不匹配Key-Value对
         MatchPair pair = null;
         // 多个Value值
@@ -169,7 +169,7 @@ public class ConditionRouter implements Router, Comparable<Router> {
                     pair = new MatchPair();
                     condition.put(content, pair);
                 } else {
-                    condition.put(content, pair);
+                    pair = condition.get(content);
                 }
             }
             // KV的Value部分开始

@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,11 +28,11 @@ import com.alibaba.dubbo.rpc.RpcException;
 
 /**
  * FutureAdapter
- * 
+ *
  * @author william.liangf
  */
 public class FutureAdapter<V> implements Future<V> {
-    
+
     private final ResponseFuture future;
 
     public FutureAdapter(ResponseFuture future){
@@ -68,7 +68,7 @@ public class FutureAdapter<V> implements Future<V> {
 
     @SuppressWarnings("unchecked")
     public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        int timeoutInMillis = (int) unit.convert(timeout, TimeUnit.MILLISECONDS);
+        int timeoutInMillis = (int) TimeUnit.MILLISECONDS.convert(timeout, unit);
         try {
             return (V) (((Result) future.get(timeoutInMillis)).recreate());
         } catch (com.alibaba.dubbo.remoting.TimeoutException e) {

@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ import com.alibaba.dubbo.registry.NotifyListener;
 
 /**
  * FailbackRegistry. (SPI, Prototype, ThreadSafe)
- * 
+ *
  * @author william.liangf
  */
 public abstract class FailbackRegistry extends AbstractRegistry {
@@ -48,7 +48,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     // 失败重试定时器，定时检查是否有请求失败，如有，无限次重试
     private final ScheduledFuture<?> retryFuture;
 
-    private AtomicBoolean destroyed = new AtomicBoolean(false);
+//    private AtomicBoolean destroyed = new AtomicBoolean(false);
 
     private final Set<URL> failedRegistered = new ConcurrentHashSet<URL>();
 
@@ -125,9 +125,9 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void register(URL url) {
-        if (destroyed.get()){
-            return;
-        }
+//        if (destroyed.get()){
+//            return;
+//        }
         super.register(url);
         failedRegistered.remove(url);
         failedUnregistered.remove(url);
@@ -158,9 +158,9 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void unregister(URL url) {
-        if (destroyed.get()){
-            return;
-        }
+//        if (destroyed.get()){
+//            return;
+//        }
         super.unregister(url);
         failedRegistered.remove(url);
         failedUnregistered.remove(url);
@@ -191,9 +191,9 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void subscribe(URL url, NotifyListener listener) {
-        if (destroyed.get()){
-            return;
-        }
+//        if (destroyed.get()){
+//            return;
+//        }
         super.subscribe(url, listener);
         removeFailedSubscribed(url, listener);
         try {
@@ -228,9 +228,9 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void unsubscribe(URL url, NotifyListener listener) {
-        if (destroyed.get()){
-            return;
-        }
+//        if (destroyed.get()){
+//            return;
+//        }
         super.unsubscribe(url, listener);
         removeFailedSubscribed(url, listener);
         try {
@@ -283,11 +283,11 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             logger.error("Failed to notify for subscribe " + url + ", waiting for retry, cause: " + t.getMessage(), t);
         }
     }
-    
+
     protected void doNotify(URL url, NotifyListener listener, List<URL> urls) {
     	super.notify(url, listener, urls);
     }
-    
+
     @Override
     protected void recover() throws Exception {
         // register
@@ -448,22 +448,11 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void destroy() {
-        if (!canDestroy()){
-            return;
-        }
         super.destroy();
         try {
             retryFuture.cancel(true);
         } catch (Throwable t) {
             logger.warn(t.getMessage(), t);
-        }
-    }
-    // TODO: 2017/8/30 to abstract this method
-    protected boolean canDestroy(){
-        if (destroyed.compareAndSet(false, true)) {
-            return true;
-        }else{
-            return false;
         }
     }
 

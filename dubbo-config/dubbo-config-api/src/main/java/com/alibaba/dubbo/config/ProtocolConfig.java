@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ import com.alibaba.dubbo.common.extension.ExtensionLoader;
 import com.alibaba.dubbo.common.serialize.Serialization;
 import com.alibaba.dubbo.common.status.StatusChecker;
 import com.alibaba.dubbo.common.threadpool.ThreadPool;
+import com.alibaba.dubbo.common.utils.ConfigUtils;
 import com.alibaba.dubbo.config.support.Parameter;
 import com.alibaba.dubbo.registry.support.AbstractRegistryFactory;
 import com.alibaba.dubbo.remoting.Dispatcher;
@@ -35,7 +36,7 @@ import com.alibaba.dubbo.rpc.protocol.AbstractProtocol;
 
 /**
  * ProtocolConfig
- * 
+ *
  * @author william.liangf
  * @export
  */
@@ -54,70 +55,70 @@ public class ProtocolConfig extends AbstractConfig {
 
     // 上下文路径
     private String              contextpath;
-    
+
     // 线程池类型
     private String              threadpool;
-    
+
     // 线程池大小(固定大小)
     private Integer             threads;
-    
+
     // IO线程池大小(固定大小)
     private Integer             iothreads;
-    
+
     // 线程池队列大小
     private Integer             queues;
-    
+
     // 最大接收连接数
     private Integer             accepts;
-    
+
     // 协议编码
     private String              codec;
-    
+
     // 序列化方式
     private String              serialization;
-    
+
     // 字符集
     private String              charset;
-    
+
     // 最大请求数据长度
     private Integer             payload;
-    
+
     // 缓存区大小
     private Integer             buffer;
-    
+
     // 心跳间隔
     private Integer             heartbeat;
 
     // 访问日志
     private String              accesslog;
-    
+
     // 网络传输方式
     private String              transporter;
-    
+
     // 信息交换方式
     private String              exchanger;
-    
+
     // 信息线程模型派发方式
     private String              dispatcher;
 
     // 对称网络组网方式
     private String              networker;
-    
+
     // 服务器端实现
     private String              server;
-    
+
     // 客户端实现
     private String              client;
-    
+
     // 支持的telnet命令，多个命令用逗号分隔
     private String              telnet;
-    
+
     // 命令行提示符
     private String              prompt;
 
     // status检查
     private String              status;
-    
+
     // 是否注册
     private Boolean             register;
 
@@ -130,7 +131,7 @@ public class ProtocolConfig extends AbstractConfig {
     private String optimizer;
 
     private String extension;
-    
+
     // 参数
     private Map<String, String> parameters;
 
@@ -138,10 +139,10 @@ public class ProtocolConfig extends AbstractConfig {
     private Boolean isDefault;
 
     private static final AtomicBoolean destroyed = new AtomicBoolean(false);
-    
+
     public ProtocolConfig() {
     }
-    
+
     public ProtocolConfig(String name) {
         setName(name);
     }
@@ -150,7 +151,7 @@ public class ProtocolConfig extends AbstractConfig {
         setName(name);
         setPort(port);
     }
-    
+
     @Parameter(excluded = true)
     public String getName() {
         return name;
@@ -232,15 +233,15 @@ public class ProtocolConfig extends AbstractConfig {
     public Integer getQueues() {
         return queues;
     }
-    
+
     public void setQueues(Integer queues) {
         this.queues = queues;
     }
-    
+
     public Integer getAccepts() {
         return accepts;
     }
-    
+
     public void setAccepts(Integer accepts) {
         this.accepts = accepts;
     }
@@ -259,7 +260,7 @@ public class ProtocolConfig extends AbstractConfig {
     public String getSerialization() {
         return serialization;
     }
-    
+
     public void setSerialization(String serialization) {
         if ("dubbo".equals(name)) {
             checkMultiExtension(Serialization.class, "serialization", serialization);
@@ -320,11 +321,11 @@ public class ProtocolConfig extends AbstractConfig {
         }
         this.client = client;
     }
-    
+
     public String getAccesslog() {
         return accesslog;
     }
-    
+
     public void setAccesslog(String accesslog) {
         this.accesslog = accesslog;
     }
@@ -332,7 +333,7 @@ public class ProtocolConfig extends AbstractConfig {
     public String getTelnet() {
         return telnet;
     }
-    
+
     public void setTelnet(String telnet) {
         checkMultiExtension(TelnetHandler.class, "telnet", telnet);
         this.telnet = telnet;
@@ -350,7 +351,7 @@ public class ProtocolConfig extends AbstractConfig {
     public String getStatus() {
         return status;
     }
-    
+
     public void setStatus(String status) {
         checkMultiExtension(StatusChecker.class, "status", status);
         this.status = status;
@@ -359,24 +360,24 @@ public class ProtocolConfig extends AbstractConfig {
     public Boolean isRegister() {
         return register;
     }
-    
+
     public void setRegister(Boolean register) {
         this.register = register;
     }
-    
+
     public String getTransporter() {
         return transporter;
     }
-    
+
     public void setTransporter(String transporter) {
         checkExtension(Transporter.class, "transporter", transporter);
         this.transporter = transporter;
     }
-    
+
     public String getExchanger() {
         return exchanger;
     }
-    
+
     public void setExchanger(String exchanger) {
         checkExtension(Exchanger.class, "exchanger", exchanger);
         this.exchanger = exchanger;
@@ -468,14 +469,20 @@ public class ProtocolConfig extends AbstractConfig {
         if (!destroyed.compareAndSet(false, true)) {
             return;
         }
+        System.out.println("kill进程了 开始停服务");
+        logger.warn("kill进程了 开始停服务");
         //1. 关闭注册中心
         AbstractRegistryFactory.destroyAll();
+        System.out.println("注册中心已经关闭");
+        logger.warn("注册中心已经关闭");
 
         //2。 Wait for registry notification
         //这一句是新版dubbo的关键改动之处。老版本没有这几行sleep的代码【请读者自行阅读老版本的源码】。默认10秒，可以通过 [dubbo.service.shutdown.wait] 配置
         //
         try {
-            Thread.sleep(AbstractProtocol.getSonliShutdownTimeout());
+            System.out.println("关闭注册中心 休息" + ConfigUtils.getServerShutdownTimeout() );
+            logger.warn("关闭注册中心 休息" + ConfigUtils.getServerShutdownTimeout() );
+            Thread.sleep(ConfigUtils.getServerShutdownTimeout());
 //            Thread.sleep(3000);
         } catch (InterruptedException e) {
             logger.warn("Interrupted unexpectedly when waiting for registry notification during shutdown process!");

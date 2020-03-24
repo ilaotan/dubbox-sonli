@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,7 +44,7 @@ import com.alibaba.dubbo.config.spring.extension.SpringExtensionFactory;
 
 /**
  * ServiceFactoryBean
- * 
+ *
  * @author william.liangf
  * @export
  */
@@ -53,13 +53,13 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
 	private static final long serialVersionUID = 213195494150089726L;
 
     private static transient ApplicationContext SPRING_CONTEXT;
-    
+
 	private transient ApplicationContext applicationContext;
 
     private transient String beanName;
 
     private transient boolean supportedApplicationListener;
-    
+
 	public ServiceBean() {
         super();
     }
@@ -111,7 +111,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
             }
         }
     }
-    
+
     private boolean isDelay() {
         Integer delay = getDelay();
         ProviderConfig provider = getProvider();
@@ -241,7 +241,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
             }
         }
         if (getPath() == null || getPath().length() == 0) {
-            if (beanName != null && beanName.length() > 0 
+            if (beanName != null && beanName.length() > 0
                     && getInterface() != null && getInterface().length() > 0
                     && beanName.startsWith(getInterface())) {
                 setPath(beanName);
@@ -253,7 +253,10 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
     }
 
     public void destroy() throws Exception {
-        unexport();
+	    // copy from dubbo 2.5.10
+        // This will only be called for singleton scope bean, and expected to be called by spring shutdown hook when BeanFactory/ApplicationContext destroys.
+        // We will guarantee dubbo related resources being released with dubbo shutdown hook.
+        //unexport();
     }
 
     // added by lishen

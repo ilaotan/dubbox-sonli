@@ -56,7 +56,10 @@ public class Main {
                 containers.add(loader.getExtension(args[i]));
             }
             logger.info("Use container type(" + Arrays.toString(args) + ") to run dubbo serivce.");
-            
+
+            //优雅停机hook
+            logger.error("优雅停机 hook 开关 " + System.getProperty(SHUTDOWN_HOOK_KEY));
+            System.out.println("优雅停机 hook 开关 " + System.getProperty(SHUTDOWN_HOOK_KEY));
             if ("true".equals(System.getProperty(SHUTDOWN_HOOK_KEY))) {
 	            Runtime.getRuntime().addShutdownHook(new Thread() {
 	                public void run() {

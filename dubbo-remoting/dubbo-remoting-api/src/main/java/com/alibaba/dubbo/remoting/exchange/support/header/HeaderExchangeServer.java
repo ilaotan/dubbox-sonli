@@ -107,6 +107,7 @@ public class HeaderExchangeServer implements ExchangeServer {
             final long max = (long) timeout;
             final long start = System.currentTimeMillis();
             if (getUrl().getParameter(Constants.CHANNEL_SEND_READONLYEVENT_KEY, true)) {
+                System.out.println("channel 设置为只读只读只读只读只读只读只读只读只读只读只读只读只读只读只读只读只读");
                 sendChannelReadOnlyEvent();
             }
             while (HeaderExchangeServer.this.isRunning() 

@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ import com.alibaba.dubbo.registry.Registry;
 
 /**
  * AbstractRegistry. (SPI, Prototype, ThreadSafe)
- * 
+ *
  * @author chao.liuc
  * @author william.liangf
  */
@@ -79,10 +79,10 @@ public abstract class AbstractRegistry implements Registry {
 
     //是否是同步保存文件
     private final boolean syncSaveFile ;
-    
+
     private final AtomicLong lastCacheChanged = new AtomicLong();
 
-    private AtomicBoolean destroyed = new AtomicBoolean(false);
+//    private AtomicBoolean destroyed = new AtomicBoolean(false);
 
     private final Set<URL> registered = new ConcurrentHashSet<URL>();
 
@@ -153,7 +153,7 @@ public abstract class AbstractRegistry implements Registry {
             doSaveProperties(version);
         }
     }
-    
+
     public void doSaveProperties(long version) {
         if(version < lastCacheChanged.get()){
             return;
@@ -179,7 +179,7 @@ public abstract class AbstractRegistry implements Registry {
                     logger.warn(e.getMessage(), e);
                 }
             }
-        }     
+        }
      // 保存
         try {
 			newProperties.putAll(properties);
@@ -200,7 +200,7 @@ public abstract class AbstractRegistry implements Registry {
                     	if (! file.exists()) {
                             file.createNewFile();
                         }
-                        FileOutputStream outputFile = new FileOutputStream(file);  
+                        FileOutputStream outputFile = new FileOutputStream(file);
                         try {
                             newProperties.store(outputFile, "Dubbo Registry Cache");
                         } finally {
@@ -388,14 +388,14 @@ public abstract class AbstractRegistry implements Registry {
 
     protected void notify(List<URL> urls) {
         if(urls == null || urls.isEmpty()) return;
-        
+
         for (Map.Entry<URL, Set<NotifyListener>> entry : getSubscribed().entrySet()) {
             URL url = entry.getKey();
-            
+
             if(! UrlUtils.isMatch(url, urls.get(0))) {
                 continue;
             }
-            
+
             Set<NotifyListener> listeners = entry.getValue();
             if (listeners != null) {
                 for (NotifyListener listener : listeners) {
@@ -416,7 +416,7 @@ public abstract class AbstractRegistry implements Registry {
         if (listener == null) {
             throw new IllegalArgumentException("notify listener == null");
         }
-        if ((urls == null || urls.size() == 0) 
+        if ((urls == null || urls.size() == 0)
                 && ! Constants.ANY_VALUE.equals(url.getServiceInterface())) {
             logger.warn("Ignore empty notify urls for subscribe url " + url);
             return;
@@ -457,7 +457,7 @@ public abstract class AbstractRegistry implements Registry {
         if (file == null) {
             return;
         }
-        
+
         try {
             StringBuilder buf = new StringBuilder();
             Map<String, List<URL>> categoryNotified = notified.get(url);
@@ -484,9 +484,9 @@ public abstract class AbstractRegistry implements Registry {
     }
 
     public void destroy() {
-        if (!destroyed.compareAndSet(false, true)) {
-            return;
-        }
+//        if (!destroyed.compareAndSet(false, true)) {
+//            return;
+//        }
         if (logger.isInfoEnabled()){
             logger.info("Destroy registry:" + getUrl());
         }

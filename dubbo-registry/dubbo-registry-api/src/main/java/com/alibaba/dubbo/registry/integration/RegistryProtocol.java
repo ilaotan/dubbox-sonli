@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,12 +19,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.URL;
 import com.alibaba.dubbo.common.extension.ExtensionLoader;
 import com.alibaba.dubbo.common.logger.Logger;
 import com.alibaba.dubbo.common.logger.LoggerFactory;
+import com.alibaba.dubbo.common.utils.ConfigUtils;
+import com.alibaba.dubbo.common.utils.NamedThreadFactory;
 import com.alibaba.dubbo.common.utils.NetUtils;
 import com.alibaba.dubbo.common.utils.StringUtils;
 import com.alibaba.dubbo.common.utils.UrlUtils;
@@ -43,32 +47,32 @@ import com.alibaba.dubbo.rpc.protocol.InvokerWrapper;
 
 /**
  * RegistryProtocol
- * 
+ *
  * @author william.liangf
  * @author chao.liuc
  */
 public class RegistryProtocol implements Protocol {
 
     private Cluster cluster;
-    
+
     public void setCluster(Cluster cluster) {
         this.cluster = cluster;
     }
-    
+
     private Protocol protocol;
-    
+
     public void setProtocol(Protocol protocol) {
         this.protocol = protocol;
     }
 
     private RegistryFactory registryFactory;
-    
+
     public void setRegistryFactory(RegistryFactory registryFactory) {
         this.registryFactory = registryFactory;
     }
 
     private ProxyFactory proxyFactory;
-    
+
     public void setProxyFactory(ProxyFactory proxyFactory) {
         this.proxyFactory = proxyFactory;
     }
@@ -76,22 +80,22 @@ public class RegistryProtocol implements Protocol {
     public int getDefaultPort() {
         return 9090;
     }
-    
+
     private static RegistryProtocol INSTANCE;
 
     public RegistryProtocol() {
         INSTANCE = this;
     }
-    
+
     public static RegistryProtocol getRegistryProtocol() {
         if (INSTANCE == null) {
             ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(Constants.REGISTRY_PROTOCOL); // load
         }
         return INSTANCE;
     }
-    
+
     private final Map<URL, NotifyListener> overrideListeners = new ConcurrentHashMap<URL, NotifyListener>();
-    
+
     public Map<URL, NotifyListener> getOverrideListeners() {
 		return overrideListeners;
 	}
@@ -99,9 +103,9 @@ public class RegistryProtocol implements Protocol {
 	//用于解决rmi重复暴露端口冲突的问题，已经暴露过的服务不再重新暴露
     //providerurl <--> exporter
     private final Map<String, ExporterChangeableWrapper<?>> bounds = new ConcurrentHashMap<String, ExporterChangeableWrapper<?>>();
-    
+
     private final static Logger logger = LoggerFactory.getLogger(RegistryProtocol.class);
-    
+
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
         //export invoker
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
@@ -116,31 +120,9 @@ public class RegistryProtocol implements Protocol {
         overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
         //保证每次export都返回一个新的exporter实例
-        return new Exporter<T>() {
-            public Invoker<T> getInvoker() {
-                return exporter.getInvoker();
-            }
-            public void unexport() {
-            	try {
-            		exporter.unexport();
-            	} catch (Throwable t) {
-                	logger.warn(t.getMessage(), t);
-                }
-                try {
-                	registry.unregister(registedProviderUrl);
-                } catch (Throwable t) {
-                	logger.warn(t.getMessage(), t);
-                }
-                try {
-                	overrideListeners.remove(overrideSubscribeUrl);
-                	registry.unsubscribe(overrideSubscribeUrl, overrideSubscribeListener);
-                } catch (Throwable t) {
-                	logger.warn(t.getMessage(), t);
-                }
-            }
-        };
+        return new DestroyableExporter<T>(exporter, originInvoker, overrideSubscribeUrl, registedProviderUrl);
     }
-    
+
     @SuppressWarnings("unchecked")
     private <T> ExporterChangeableWrapper<T>  doLocalExport(final Invoker<T> originInvoker){
         String key = getCacheKey(originInvoker);
@@ -157,7 +139,7 @@ public class RegistryProtocol implements Protocol {
         }
         return (ExporterChangeableWrapper<T>) exporter;
     }
-    
+
     /**
      * 对修改了url的invoker重新export
      * @param originInvoker
@@ -169,7 +151,7 @@ public class RegistryProtocol implements Protocol {
         final ExporterChangeableWrapper<T> exporter = (ExporterChangeableWrapper<T>) bounds.get(key);
         if (exporter == null){
             logger.warn(new IllegalStateException("error state, exporter should not be null"));
-            return ;//不存在是异常场景 直接返回 
+            return ;//不存在是异常场景 直接返回
         } else {
             final Invoker<T> invokerDelegete = new InvokerDelegete<T>(originInvoker, newInvokerUrl);
             exporter.setExporter(protocol.export(invokerDelegete));
@@ -201,10 +183,10 @@ public class RegistryProtocol implements Protocol {
         final URL registedProviderUrl = providerUrl.removeParameters(getFilteredKeys(providerUrl)).removeParameter(Constants.MONITOR_KEY);
         return registedProviderUrl;
     }
-    
+
     private URL getSubscribedOverrideUrl(URL registedProviderUrl){
     	return registedProviderUrl.setProtocol(Constants.PROVIDER_PROTOCOL)
-                .addParameters(Constants.CATEGORY_KEY, Constants.CONFIGURATORS_CATEGORY, 
+                .addParameters(Constants.CATEGORY_KEY, Constants.CONFIGURATORS_CATEGORY,
                         Constants.CHECK_KEY, String.valueOf(false));
     }
 
@@ -218,7 +200,7 @@ public class RegistryProtocol implements Protocol {
         if (export == null || export.length() == 0) {
             throw new IllegalArgumentException("The registry export url is null! registry: " + origininvoker.getUrl());
         }
-        
+
         URL providerUrl = URL.valueOf(export);
         return providerUrl;
     }
@@ -233,7 +215,7 @@ public class RegistryProtocol implements Protocol {
         String key = providerUrl.removeParameters("dynamic", "enabled").toFullString();
         return key;
     }
-    
+
     @SuppressWarnings("unchecked")
 	public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         url = url.setProtocol(url.getParameter(Constants.REGISTRY_KEY, Constants.DEFAULT_REGISTRY)).removeParameter(Constants.REGISTRY_KEY);
@@ -253,11 +235,11 @@ public class RegistryProtocol implements Protocol {
         }
         return doRefer(cluster, registry, type, url);
     }
-    
+
     private Cluster getMergeableCluster() {
         return ExtensionLoader.getExtensionLoader(Cluster.class).getExtension("mergeable");
     }
-    
+
     private <T> Invoker<T> doRefer(Cluster cluster, Registry registry, Class<T> type, URL url) {
         RegistryDirectory<T> directory = new RegistryDirectory<T>(type, url);
         directory.setRegistry(registry);
@@ -268,9 +250,9 @@ public class RegistryProtocol implements Protocol {
             registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY,
                     Constants.CHECK_KEY, String.valueOf(false)));
         }
-        directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY, 
-                Constants.PROVIDERS_CATEGORY 
-                + "," + Constants.CONFIGURATORS_CATEGORY 
+        directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY,
+                Constants.PROVIDERS_CATEGORY
+                + "," + Constants.CONFIGURATORS_CATEGORY
                 + "," + Constants.ROUTERS_CATEGORY));
         return cluster.join(directory);
     }
@@ -290,7 +272,7 @@ public class RegistryProtocol implements Protocol {
             return new String[] {};
         }
     }
-    
+
     public void destroy() {
         List<Exporter<?>> exporters = new ArrayList<Exporter<?>>(bounds.values());
         for(Exporter<?> exporter :exporters){
@@ -298,17 +280,17 @@ public class RegistryProtocol implements Protocol {
         }
         bounds.clear();
     }
-    
-    
-    /*重新export 1.protocol中的exporter destory问题 
+
+
+    /*重新export 1.protocol中的exporter destory问题
      *1.要求registryprotocol返回的exporter可以正常destroy
-     *2.notify后不需要重新向注册中心注册 
+     *2.notify后不需要重新向注册中心注册
      *3.export 方法传入的invoker最好能一直作为exporter的invoker.
      */
     private class OverrideListener implements NotifyListener {
-    	
+
     	private volatile List<Configurator> configurators;
-    	
+
     	private final URL subscribeUrl;
 
 		public OverrideListener(URL subscribeUrl) {
@@ -350,16 +332,16 @@ public class RegistryProtocol implements Protocol {
                 }else {
                     originInvoker = invoker;
                 }
-                
+
                 URL originUrl = RegistryProtocol.this.getProviderUrl(originInvoker);
                 URL newUrl = getNewInvokerUrl(originUrl, urls);
-                
+
                 if (! originUrl.equals(newUrl)){
                     RegistryProtocol.this.doChangeLocalExport(originInvoker, newUrl);
                 }
             }
         }
-        
+
         private URL getNewInvokerUrl(URL url, List<URL> urls){
         	List<Configurator> localConfigurators = this.configurators; // local reference
             // 合并override参数
@@ -371,11 +353,11 @@ public class RegistryProtocol implements Protocol {
             return url;
         }
     }
-    
+
     public static class InvokerDelegete<T> extends InvokerWrapper<T>{
         private final Invoker<T> invoker;
         /**
-         * @param invoker 
+         * @param invoker
          * @param url invoker.getUrl返回此值
          */
         public InvokerDelegete(Invoker<T> invoker, URL url){
@@ -390,25 +372,25 @@ public class RegistryProtocol implements Protocol {
             }
         }
     }
-    
+
     /**
      * exporter代理,建立返回的exporter与protocol export出的exporter的对应关系，在override时可以进行关系修改.
-     * 
+     *
      * @author chao.liuc
      *
      * @param <T>
      */
     private class ExporterChangeableWrapper<T> implements Exporter<T>{
-    	
+
         private Exporter<T> exporter;
-        
+
         private final Invoker<T> originInvoker;
 
         public ExporterChangeableWrapper(Exporter<T> exporter, Invoker<T> originInvoker){
             this.exporter = exporter;
             this.originInvoker = originInvoker;
         }
-        
+
         public Invoker<T> getOriginInvoker() {
             return originInvoker;
         }
@@ -416,7 +398,7 @@ public class RegistryProtocol implements Protocol {
         public Invoker<T> getInvoker() {
             return exporter.getInvoker();
         }
-        
+
         public void setExporter(Exporter<T> exporter){
             this.exporter = exporter;
         }
@@ -425,6 +407,58 @@ public class RegistryProtocol implements Protocol {
             String key = getCacheKey(this.originInvoker);
             bounds.remove(key);
             exporter.unexport();
+        }
+    }
+
+    static private class DestroyableExporter<T> implements Exporter<T> {
+
+        public static final ExecutorService executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("Exporter-Unexport", true));
+
+        private Exporter<T> exporter;
+        private Invoker<T> originInvoker;
+        private URL subscribeUrl;
+        private URL registerUrl;
+
+        public DestroyableExporter(Exporter<T> exporter, Invoker<T> originInvoker, URL subscribeUrl, URL registerUrl) {
+            this.exporter = exporter;
+            this.originInvoker = originInvoker;
+            this.subscribeUrl = subscribeUrl;
+            this.registerUrl = registerUrl;
+        }
+
+        public Invoker<T> getInvoker() {
+            return exporter.getInvoker();
+        }
+
+        public void unexport() {
+            Registry registry = RegistryProtocol.INSTANCE.getRegistry(originInvoker);
+            try {
+                registry.unregister(registerUrl);
+            } catch (Throwable t) {
+                logger.warn(t.getMessage(), t);
+            }
+            try {
+                NotifyListener listener = RegistryProtocol.INSTANCE.overrideListeners.remove(subscribeUrl);
+                registry.unsubscribe(subscribeUrl, listener);
+            } catch (Throwable t) {
+                logger.warn(t.getMessage(), t);
+            }
+
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        int timeout = ConfigUtils.getServerShutdownTimeout();
+                        if (timeout > 0) {
+                            logger.info("Waiting " + timeout + "ms for registry to notify all consumers before unexport. Usually, this is called when you use dubbo API");
+                            Thread.sleep(timeout);
+                        }
+                        exporter.unexport();
+                    } catch (Throwable t) {
+                        logger.warn(t.getMessage(), t);
+                    }
+                }
+            });
         }
     }
 }

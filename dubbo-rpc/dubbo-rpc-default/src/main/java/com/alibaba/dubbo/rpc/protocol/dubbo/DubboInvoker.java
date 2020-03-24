@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,11 +34,12 @@ import com.alibaba.dubbo.rpc.RpcException;
 import com.alibaba.dubbo.rpc.RpcInvocation;
 import com.alibaba.dubbo.rpc.RpcResult;
 import com.alibaba.dubbo.rpc.protocol.AbstractInvoker;
+import com.alibaba.dubbo.rpc.protocol.AbstractProtocol;
 import com.alibaba.dubbo.rpc.support.RpcUtils;
 
 /**
  * DubboInvoker
- * 
+ *
  * @author william.liangf
  * @author chao.liuc
  */
@@ -49,21 +50,21 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
     private final AtomicPositiveInteger index = new AtomicPositiveInteger();
 
     private final String                version;
-    
+
     private final ReentrantLock     destroyLock = new ReentrantLock();
-    
+
     private final Set<Invoker<?>> invokers;
-    
+
     public DubboInvoker(Class<T> serviceType, URL url, ExchangeClient[] clients){
         this(serviceType, url, clients, null);
     }
-    
+
     public DubboInvoker(Class<T> serviceType, URL url, ExchangeClient[] clients, Set<Invoker<?>> invokers){
         super(serviceType, url, new String[] {Constants.INTERFACE_KEY, Constants.GROUP_KEY, Constants.TOKEN_KEY, Constants.TIMEOUT_KEY});
         this.clients = clients;
         // get version.
         this.version = url.getParameter(Constants.VERSION_KEY, "0.0.0");
-        this.invokers = invokers; 
+        this.invokers = invokers;
     }
 
     @Override
@@ -72,7 +73,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         final String methodName = RpcUtils.getMethodName(invocation);
         inv.setAttachment(Constants.PATH_KEY, getUrl().getPath());
         inv.setAttachment(Constants.VERSION_KEY, version);
-        
+
         ExchangeClient currentClient;
         if (clients.length == 1) {
             currentClient = clients[0];
@@ -102,7 +103,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             throw new RpcException(RpcException.NETWORK_EXCEPTION, "Failed to invoke remote method: " + invocation.getMethodName() + ", provider: " + getUrl() + ", cause: " + e.getMessage(), e);
         }
     }
-    
+
     @Override
     public boolean isAvailable() {
         if (!super.isAvailable())
@@ -133,13 +134,15 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
                 }
                 for (ExchangeClient client : clients) {
                     try {
-                        this.close(client);
+                        System.out.println(" clinet 端 close client.close(ConfigUtils.getServerShutdownTimeout()) the value is: " + ConfigUtils.getServerShutdownTimeout());
+                        client.close(ConfigUtils.getServerShutdownTimeout());
+//                        this.close(client);
 //                        client.close();
                     } catch (Throwable t) {
                         logger.warn(t.getMessage(), t);
                     }
                 }
-                
+
             }finally {
                 destroyLock.unlock();
             }

@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.alibaba.dubbo.common.Constants;
 import com.alibaba.dubbo.common.Parameters;
 import com.alibaba.dubbo.common.URL;
+import com.alibaba.dubbo.common.utils.ConfigUtils;
 import com.alibaba.dubbo.remoting.ChannelHandler;
 import com.alibaba.dubbo.remoting.RemotingException;
 import com.alibaba.dubbo.remoting.exchange.ExchangeClient;
@@ -31,23 +32,23 @@ import com.alibaba.dubbo.rpc.protocol.AbstractProtocol;
 
 /**
  * dubbo protocol support class.
- * 
+ *
  * @author chao.liuc
  */
 @SuppressWarnings("deprecation")
 final class ReferenceCountExchangeClient implements ExchangeClient {
 
     private ExchangeClient client;
-    
+
     private final URL url;
-    
+
 //    private final ExchangeHandler handler;
-    
+
     private final AtomicInteger refenceCount = new AtomicInteger(0);
-    
+
     private final ConcurrentMap<String, LazyConnectExchangeClient> ghostClientMap;
-    
-    
+
+
     public ReferenceCountExchangeClient(ExchangeClient client, ConcurrentMap<String, LazyConnectExchangeClient> ghostClientMap) {
         this.client = client;
         refenceCount.incrementAndGet();
@@ -125,15 +126,16 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
     public void removeAttribute(String key) {
         client.removeAttribute(key);
     }
-    /* 
+    /*
      * close方法将不再幂等,调用需要注意.
      */
     public void close() {
         //默认设置close超时时间，否则没法真正实现graceful shutdown
-        close(AbstractProtocol.getServerShutdownTimeout());
+        close(ConfigUtils.getServerShutdownTimeout());
     }
 
     public void close(int timeout) {
+        System.out.println("ReferenceCountExchangeClient close() timeout" + timeout);
         if (refenceCount.decrementAndGet() <= 0){
             if (timeout == 0){
                 client.close();
@@ -143,7 +145,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
             client = replaceWithLazyClient();
         }
     }
-    
+
     //幽灵client,
     private LazyConnectExchangeClient replaceWithLazyClient(){
         //这个操作只为了防止程序bug错误关闭client做的防御措施，初始client必须为false状态
@@ -153,7 +155,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
                 .addParameter("warning", Boolean.TRUE.toString())
                 .addParameter(LazyConnectExchangeClient.REQUEST_WITH_WARNING_KEY, true)
                 .addParameter("_client_memo", "referencecounthandler.replacewithlazyclient");
-        
+
         String key = url.getAddress();
         //最差情况下只有一个幽灵连接
         LazyConnectExchangeClient gclient = ghostClientMap.get(key);
@@ -167,7 +169,7 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
     public boolean isClosed() {
         return client.isClosed();
     }
-    
+
     public void incrementAndGetCount(){
         refenceCount.incrementAndGet();
     }

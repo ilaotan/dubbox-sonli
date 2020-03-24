@@ -121,6 +121,7 @@ final class NettyChannel extends AbstractChannel {
     }
 
     public void close() {
+        System.out.println(Thread.currentThread().getName() + " NettyChannelclose");
         try {
             super.close();
         } catch (Exception e) {
@@ -142,9 +143,13 @@ final class NettyChannel extends AbstractChannel {
             }
             //add by wuhongqiang 2014.4.16
             //等待最后一个write事件完成才close channel，否则有可能丢失该write的message
-            if (lastChannelFuture != null) {
-                lastChannelFuture.await(getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT));
-            }
+            // 注释掉 by tan 2020.2.19
+//            if (lastChannelFuture != null) {
+//                System.out.println("等待最后一个write事件完成才close channel，否则有可能丢失该write的message " + getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, 1000));
+//                lastChannelFuture.await(getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT));
+////                lastChannelFuture.await(getUrl().getPositiveParameter(Constants.TIMEOUT_KEY, 1));
+//                System.out.println("等待最后一个write事件完成才close channel，否则有可能丢失该write的message over ");
+//            }
             channel.close();
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
