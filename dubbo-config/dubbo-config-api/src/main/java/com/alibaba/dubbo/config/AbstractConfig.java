@@ -443,16 +443,16 @@ public abstract class AbstractConfig implements Serializable {
         }
     }
 
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            public void run() {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Run shutdown hook now.");
-                }
-                ProtocolConfig.destroyAll();
-            }
-        }, "DubboShutdownHook"));
-    }
+//    static {
+//        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+//            public void run() {
+//                if (logger.isInfoEnabled()) {
+//                    logger.info("Run shutdown hook now.");
+//                }
+//                ProtocolConfig.destroyAll();
+//            }
+//        }, "DubboShutdownHook"));
+//    }
 
     private static final String[] SUFFIXS = new String[] {"Config", "Bean"};
 

@@ -51,47 +51,38 @@ public class NettyClient extends AbstractClient {
 
     // 因ChannelFactory的关闭有DirectMemory泄露，采用静态化规避
     // https://issues.jboss.org/browse/NETTY-424
-    private static final ChannelFactory channelFactory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(new NamedThreadFactory("NettyClientBoss", true)),
+    // updateby tan 把这个对象可访问 让spring容器控制关闭
+    public static final ChannelFactory channelFactory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(new NamedThreadFactory("NettyClientBoss", true)),
                                                                                            Executors.newCachedThreadPool(new NamedThreadFactory("NettyClientWorker", true)),
                                                                                            Constants.DEFAULT_IO_THREADS);
 
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            public void run() {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Run shutdown hook of netty client now.");
-                }
+//    static {
+//        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+//            public void run() {
+//                if (logger.isInfoEnabled()) {
+//                    logger.info("Run shutdown hook of netty client now.");
+//                }
+//
+////                try {
+////                    System.out.println(System.currentTimeMillis() + "关闭NettyClient 延迟关闭 休息 " + ConfigUtils.getServerShutdownTimeout());
+////                    logger.warn("关闭NettyClient 延迟关闭 休息 " + ConfigUtils.getServerShutdownTimeout());
+////                    Thread.sleep(ConfigUtils.getServerShutdownTimeout());
+//////            Thread.sleep(3000);
+////                } catch (InterruptedException e) {
+////                    logger.warn("Interrupted unexpectedly when waiting for registry notification during shutdown process! NettyClient");
+////                }
+//                System.out.println(System.currentTimeMillis() + "关闭NettyClient 延迟关闭 over" );
+//                logger.warn("关闭NettyClient 延迟关闭 over ");
+//                try {
+//                    channelFactory.releaseExternalResources();
+//                } catch (Throwable t) {
+//                    logger.warn(t.getMessage());
+//                }
+//            }
+//        }, "DubboShutdownHook-NettyClient"));
+//    }
 
-                try {
-                    System.out.println(System.currentTimeMillis() + "关闭NettyClient 延迟关闭 休息 " + getSonliShutdownTimeout() );
-                    logger.warn("关闭NettyClient 延迟关闭 休息 " + getSonliShutdownTimeout() );
-                    Thread.sleep(getSonliShutdownTimeout());
-//            Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    logger.warn("Interrupted unexpectedly when waiting for registry notification during shutdown process! NettyClient");
-                }
-                System.out.println(System.currentTimeMillis() + "关闭NettyClient 延迟关闭 over" );
-                logger.warn("关闭NettyClient 延迟关闭 over ");
-                try {
-                    channelFactory.releaseExternalResources();
-                } catch (Throwable t) {
-                    logger.warn(t.getMessage());
-                }
-            }
-        }, "DubboShutdownHook-NettyClient"));
-    }
 
-    public static int getSonliShutdownTimeout() {
-        int timeout = 0;
-        String value = ConfigUtils.getProperty(Constants.SHUTDOWN_WAIT_KEY_SONLI);
-        if (value != null && value.length() > 0) {
-            try{
-                timeout = Integer.parseInt(value);
-            }catch (Exception e) {
-            }
-        }
-        return timeout;
-    }
 
 
     private ClientBootstrap bootstrap;
