@@ -1,12 +1,12 @@
 /*
  * Copyright 1999-2011 Alibaba Group.
- *  
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *  
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,19 +23,19 @@ import com.alibaba.dubbo.registry.support.AbstractRegistryFactory;
 
 /**
  * RegistryConfig
- * 
+ *
  * @author william.liangf
  * @export
  */
 public class RegistryConfig extends AbstractConfig {
 
 	private static final long serialVersionUID = 5508512956753757169L;
-	
+
 	public static final String NO_AVAILABLE = "N/A";
 
     // 注册中心地址
     private String            address;
-    
+
 	// 注册中心登录用户名
     private String            username;
 
@@ -44,19 +44,19 @@ public class RegistryConfig extends AbstractConfig {
 
     // 注册中心缺省端口
     private Integer           port;
-    
+
     // 注册中心协议
     private String            protocol;
 
     // 客户端实现
     private String            transporter;
-    
+
     private String            server;
-    
+
     private String            client;
 
     private String            cluster;
-    
+
     private String            group;
 
 	private String            version;
@@ -66,22 +66,22 @@ public class RegistryConfig extends AbstractConfig {
 
     // 注册中心会话超时时间(毫秒)
     private Integer           session;
-    
+
     // 动态注册中心列表存储文件
     private String            file;
-    
+
     // 停止时等候完成通知时间
     private Integer           wait;
-    
+
     // 启动时检查注册中心是否存在
     private Boolean           check;
 
     // 在该注册中心上注册是动态的还是静态的服务
     private Boolean           dynamic;
-    
+
     // 在该注册中心上服务是否暴露
     private Boolean           register;
-    
+
     // 在该注册中心上服务是否引用
     private Boolean           subscribe;
 
@@ -90,10 +90,10 @@ public class RegistryConfig extends AbstractConfig {
 
     // 是否为缺省
     private Boolean             isDefault;
-    
+
     public RegistryConfig() {
     }
-    
+
     public RegistryConfig(String address) {
         setAddress(address);
     }
@@ -152,18 +152,18 @@ public class RegistryConfig extends AbstractConfig {
         return wait;
     }
 
-    /**
-     * @deprecated
-     * @see com.alibaba.dubbo.config.ProviderConfig#setWait(Integer)
-     * @param wait
-     */
-    @Deprecated
-    public void setWait(Integer wait) {
-        this.wait = wait;
-        if( wait!=null && wait>0)
-            System.setProperty(Constants.SHUTDOWN_WAIT_KEY, String.valueOf(wait));
-    }
-    
+//    /**
+//     * @deprecated
+//     * @see com.alibaba.dubbo.config.ProviderConfig#setWait(Integer)
+//     * @param wait
+//     */
+//    @Deprecated
+//    public void setWait(Integer wait) {
+//        this.wait = wait;
+//        if( wait!=null && wait>0)
+//            System.setProperty(Constants.SHUTDOWN_WAIT_KEY, String.valueOf(wait));
+//    }
+
     public Boolean isCheck() {
 		return check;
 	}
@@ -191,7 +191,7 @@ public class RegistryConfig extends AbstractConfig {
     public String getTransport() {
         return getTransporter();
     }
-    
+
     /**
      * @deprecated
      * @see #setTransporter(String)
@@ -201,7 +201,7 @@ public class RegistryConfig extends AbstractConfig {
     public void setTransport(String transport) {
         setTransporter(transport);
     }
-    
+
     public String getTransporter() {
         return transporter;
     }
@@ -213,11 +213,11 @@ public class RegistryConfig extends AbstractConfig {
         }*/
         this.transporter = transporter;
     }
-    
+
     public String getServer() {
         return server;
     }
-    
+
     public void setServer(String server) {
         checkName("server", server);
         /*if(server != null && server.length() > 0 && ! ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(server)){
@@ -225,11 +225,11 @@ public class RegistryConfig extends AbstractConfig {
         }*/
         this.server = server;
     }
-    
+
     public String getClient() {
         return client;
     }
-    
+
     public void setClient(String client) {
         checkName("client", client);
         /*if(client != null && client.length() > 0 && ! ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(client)){
@@ -269,11 +269,11 @@ public class RegistryConfig extends AbstractConfig {
     public void setRegister(Boolean register) {
         this.register = register;
     }
-    
+
     public Boolean isSubscribe() {
         return subscribe;
     }
-    
+
     public void setSubscribe(Boolean subscribe) {
         this.subscribe = subscribe;
     }

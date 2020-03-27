@@ -82,16 +82,4 @@ public abstract class AbstractProtocol implements Protocol {
             }
         }
 	}
-
-    public static int getSonliShutdownTimeout() {
-        int timeout = 0;
-        String value = ConfigUtils.getProperty(Constants.SHUTDOWN_WAIT_KEY_SONLI);
-        if (value != null && value.length() > 0) {
-            try{
-                timeout = Integer.parseInt(value);
-            }catch (Exception e) {
-            }
-        }
-        return timeout;
-    }
 }
