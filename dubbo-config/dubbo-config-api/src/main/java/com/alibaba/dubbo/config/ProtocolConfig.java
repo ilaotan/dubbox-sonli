@@ -466,6 +466,15 @@ public class ProtocolConfig extends AbstractConfig {
     }
 
     public static void destroyAll() {
+        destroyAll(true);
+    }
+
+    /**
+     * 松立定制 如果是api项目，在关闭spring容器后，就直接关闭dubbo即可，不需要等待
+     *
+     * @param needSleep
+     */
+    public static void destroyAll(boolean needSleep) {
         if (!destroyed.compareAndSet(false, true)) {
             return;
         }
@@ -478,14 +487,14 @@ public class ProtocolConfig extends AbstractConfig {
 
         //2。 Wait for registry notification
         //这一句是新版dubbo的关键改动之处。老版本没有这几行sleep的代码【请读者自行阅读老版本的源码】。默认10秒，可以通过 [dubbo.service.shutdown.wait] 配置
-        //
-        try {
-            System.out.println("关闭注册中心 休息" + ConfigUtils.getServerShutdownTimeout() );
-            logger.warn("关闭注册中心 休息" + ConfigUtils.getServerShutdownTimeout() );
-            Thread.sleep(ConfigUtils.getServerShutdownTimeout());
-//            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            logger.warn("Interrupted unexpectedly when waiting for registry notification during shutdown process!");
+        if(needSleep) {
+            try {
+                System.out.println("关闭注册中心 休息" + ConfigUtils.getServerShutdownTimeout() );
+                logger.warn("关闭注册中心 休息" + ConfigUtils.getServerShutdownTimeout() );
+                Thread.sleep(ConfigUtils.getServerShutdownTimeout());
+            } catch (InterruptedException e) {
+                logger.warn("Interrupted unexpectedly when waiting for registry notification during shutdown process!");
+            }
         }
 
         ExtensionLoader<Protocol> loader = ExtensionLoader.getExtensionLoader(Protocol.class);

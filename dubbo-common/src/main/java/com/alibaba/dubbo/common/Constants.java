@@ -515,7 +515,9 @@ public class Constants {
     /**
      * 默认值毫秒，避免重新计算.
      */
-    public static final int     DEFAULT_SERVER_SHUTDOWN_TIMEOUT    = 10000;
+//    public static final int     DEFAULT_SERVER_SHUTDOWN_TIMEOUT    = 10000;
+     // 默认超时时间改为30秒
+    public static final int     DEFAULT_SERVER_SHUTDOWN_TIMEOUT    = 30000;
 
     public static final String  ON_CONNECT_KEY                     = "onconnect";
 
