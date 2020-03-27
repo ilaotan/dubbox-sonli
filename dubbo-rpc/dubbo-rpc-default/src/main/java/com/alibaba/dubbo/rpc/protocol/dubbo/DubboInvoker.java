@@ -158,15 +158,16 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
      */
     @SuppressWarnings("deprecation")
     private void close(ExchangeClient client) {
-        String timeout = ConfigUtils.getProperty(Constants.SHUTDOWN_WAIT_KEY);
-        if(timeout != null && timeout.length() > 0) {
-            try{
-                client.close(Integer.parseInt(timeout));
-            } catch(Exception e) {
-            }
-        }else {
-            // 如果没传入参数 默认值10秒 调皮不。。。
-            client.close(30000);
-        }
+        client.close(ConfigUtils.getServerShutdownTimeout());
+//        String timeout = ConfigUtils.getProperty(Constants.SHUTDOWN_WAIT_KEY);
+//        if(timeout != null && timeout.length() > 0) {
+//            try{
+//                client.close(Integer.parseInt(timeout));
+//            } catch(Exception e) {
+//            }
+//        }else {
+//            // 如果没传入参数 默认值10秒 调皮不。。。
+//            client.close(30000);
+//        }
     }
 }
